@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UD2-S1 Fundamentos CSS</title>
+    <link rel="stylesheet" href="ejercicio1_2.css" />
+    <style>
+      p {
+        color: blue;
+      }
+      .clase-especial {
+        color: purple;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>UD2-S1. Fundamentos CSS</h1>
+    <h3>Ejercicio 2: ejemplos de jerarquias css:</h3>
+    <p style="color: red">1. Rojo (en línea gana)->css interna dice blue -> css externo dice green </p>
+    <p class="clase-especial">2. Morado (clase interna gana sobre externo)->css externo dice brown</p>
+    <p id="unico">3. Naranja (ID gana sobre clase)->clase externa dice green</p>
+    <p>4. Azul (solo interno)->css interno gana sobre css externo</p>
+
+  </body>
+</html>

@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizador de Archivos HTML/CSS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #f5f5f5;
+        }
+        
+        /* Barra lateral */
+        .sidebar {
+            width: 300px;
+            background-color: #2c3e50;
+            color: white;
+            overflow-y: auto;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+        
+        .sidebar h2 {
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #34495e;
+        }
+        
+        .file-list {
+            list-style-type: none;
+        }
+        
+        .file-item {
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            background-color: #34495e;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .file-item:hover {
+            background-color: #3d566e;
+        }
+        
+        .file-item.active {
+            background-color: #3498db;
+        }
+        
+        /* Contenedor principal */
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        /* Área de contenido */
+        .content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .file-header {
+            background-color: #3498db;
+            color: white;
+            padding: 15px 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .file-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: white;
+        }
+        
+        .file-preview {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .no-file-selected {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            color: #7f8c8d;
+            font-size: 18px;
+        }
+        
+        /* Barra inferior de CSS */
+        .css-bar {
+            background-color: #34495e;
+            color: white;
+            padding: 15px 20px;
+            border-top: 2px solid #2c3e50;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        
+        .css-bar h3 {
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .css-files {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .css-file-item {
+            padding: 8px 12px;
+            background-color: #2c3e50;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        
+        .css-file-item:hover {
+            background-color: #3498db;
+        }
+        
+        .css-file-item.active {
+            background-color: #e74c3c;
+        }
+        
+        /* Panel de visualización de CSS */
+        .css-viewer {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            height: 70%;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.3);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .css-viewer-header {
+            background-color: #e74c3c;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .css-viewer-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        
+        .css-viewer-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+        }
+        
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 999;
+            display: none;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Contenedor principal -->
+    <div class="main-container">
+        <!-- Barra lateral con lista de archivos -->
+        <div class="sidebar">
+            <h2>Archivos HTML/CSS</h2>
+            <ul class="file-list" id="fileList">
+                <!-- Los archivos se cargarán aquí dinámicamente -->
+            </ul>
+        </div>
+        
+        <!-- Área de contenido principal -->
+        <div class="content-area">
+            <div class="file-header" id="fileHeader">
+                Selecciona un archivo para visualizarlo
+            </div>
+            <div class="file-content">
+                <div class="no-file-selected" id="noFileMessage">
+                    Selecciona un archivo de la lista para ver su contenido
+                </div>
+                <iframe class="file-preview" id="filePreview" style="display: none;"></iframe>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Barra inferior de archivos CSS -->
+    <div class="css-bar" id="cssBar" style="display: none;">
+        <h3>Archivos CSS utilizados:</h3>
+        <div class="css-files" id="cssFiles">
+            <!-- Los archivos CSS se cargarán aquí dinámicamente -->
+        </div>
+    </div>
+    
+    <!-- Overlay para el modal -->
+    <div class="overlay" id="overlay"></div>
+    
+    <!-- Panel de visualización de CSS -->
+    <div class="css-viewer" id="cssViewer">
+        <div class="css-viewer-header">
+            <span id="cssViewerTitle">Contenido del archivo CSS</span>
+            <button class="css-viewer-close" id="cssViewerClose">&times;</button>
+        </div>
+        <div class="css-viewer-content" id="cssViewerContent">
+            <!-- El contenido del CSS se cargará aquí -->
+        </div>
+    </div>
+
+    <script>
+        // Lista de archivos disponibles
+        const files = [
+            { name: "ejercicio4.html", path: "ejercicio4.html", css: ["ejercicio4.css"] },
+            { name: "ejercicio5_1.html", path: "ejercicio5_1.html", css: ["css/styles.css"] },
+            { name: "ejercicio5_2.html", path: "ejercicio5_2.html", css: ["ejercicio5_2.css"] },
+            { name: "ejercicio5_3.html", path: "ejercicio5_3.html", css: [] },
+            { name: "ejercicio5_4.html", path: "ejercicio5_4.html", css: ["ejercicio5_4.css"] },
+            { name: "ejercicio5_5.html", path: "ejercicio5_5.html", css: ["ejercicio5_5_css1.css", "ejercicio5_5_css2.css", "ejercicio5_5_css3.css"] },
+            { name: "ejercicio1_2.html", path: "ejercicio1_2.html", css: ["ejercicio1_2.css"] },
+            { name: "ejercicio3_2.html", path: "ejercicio3_2.html", css: [] }
+        ];
+
+        // Referencias a elementos DOM
+        const fileList = document.getElementById('fileList');
+        const fileHeader = document.getElementById('fileHeader');
+        const filePreview = document.getElementById('filePreview');
+        const noFileMessage = document.getElementById('noFileMessage');
+        const cssBar = document.getElementById('cssBar');
+        const cssFiles = document.getElementById('cssFiles');
+        const cssViewer = document.getElementById('cssViewer');
+        const cssViewerTitle = document.getElementById('cssViewerTitle');
+        const cssViewerContent = document.getElementById('cssViewerContent');
+        const cssViewerClose = document.getElementById('cssViewerClose');
+        const overlay = document.getElementById('overlay');
+
+        // Archivo actualmente seleccionado
+        let currentFile = null;
+
+        // Cargar la lista de archivos en la barra lateral
+        function loadFileList() {
+            files.forEach(file => {
+                const listItem = document.createElement('li');
+                listItem.className = 'file-item';
+                listItem.textContent = file.name;
+                listItem.addEventListener('click', () => {
+                    // Remover clase activa de todos los elementos
+                    document.querySelectorAll('.file-item').forEach(item => {
+                        item.classList.remove('active');
+                    });
+                    
+                    // Agregar clase activa al elemento seleccionado
+                    listItem.classList.add('active');
+                    
+                    // Cargar el archivo seleccionado
+                    loadFile(file);
+                });
+                
+                fileList.appendChild(listItem);
+            });
+        }
+
+        // Cargar y mostrar el archivo seleccionado
+        function loadFile(file) {
+            currentFile = file;
+            fileHeader.textContent = file.name;
+            noFileMessage.style.display = 'none';
+            filePreview.style.display = 'block';
+            filePreview.src = file.path;
+            
+            // Actualizar la barra de CSS
+            updateCssBar(file.css);
+        }
+
+        // Actualizar la barra de archivos CSS
+        function updateCssBar(cssFilesArray) {
+            // Limpiar la barra de CSS
+            cssFiles.innerHTML = '';
+            
+            if (cssFilesArray && cssFilesArray.length > 0) {
+                cssBar.style.display = 'block';
+                
+                cssFilesArray.forEach(cssFile => {
+                    const cssItem = document.createElement('div');
+                    cssItem.className = 'css-file-item';
+                    cssItem.textContent = cssFile;
+                    cssItem.addEventListener('click', () => {
+                        showCssContent(cssFile);
+                    });
+                    
+                    cssFiles.appendChild(cssItem);
+                });
+            } else {
+                cssBar.style.display = 'none';
+            }
+        }
+
+        // Mostrar el contenido del archivo CSS
+        function showCssContent(cssFile) {
+            // Hacer una solicitud para obtener el contenido del archivo CSS
+            fetch(cssFile)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Archivo no encontrado');
+                    }
+                    return response.text();
+                })
+                .then(cssContent => {
+                    cssViewerTitle.textContent = cssFile;
+                    cssViewerContent.textContent = cssContent;
+                    cssViewer.style.display = 'flex';
+                    overlay.style.display = 'block';
+                })
+                .catch(error => {
+                    cssViewerTitle.textContent = 'Error';
+                    cssViewerContent.textContent = `No se pudo cargar el archivo: ${cssFile}\n\nError: ${error.message}`;
+                    cssViewer.style.display = 'flex';
+                    overlay.style.display = 'block';
+                });
+        }
+
+        // Cerrar el visor de CSS
+        function closeCssViewer() {
+            cssViewer.style.display = 'none';
+            overlay.style.display = 'none';
+        }
+
+        // Event listeners
+        cssViewerClose.addEventListener('click', closeCssViewer);
+        overlay.addEventListener('click', closeCssViewer);
+
+        // Cerrar con la tecla Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeCssViewer();
+            }
+        });
+
+        // Inicializar la aplicación
+        loadFileList();
+    </script>
+</body>
+</html>

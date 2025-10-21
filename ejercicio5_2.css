@@ -1,0 +1,23 @@
+ * {
+     background-color: red;
+ }
+
+ body {
+     background-color: red;
+ }
+
+ body+p {
+     background-color: red;
+ }
+
+ body>p {
+     background-color: red;
+ }
+
+ body>p>em {
+     background-color: red;
+ }
+
+ p+em {
+     background-color: red;
+ }
